@@ -85,6 +85,7 @@ class App {
 
   private initializeMqtt(){
     const mqttconn = new mqtt();
+    mqttconn.connect()
   }
 }
 

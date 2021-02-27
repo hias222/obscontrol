@@ -2,16 +2,24 @@ import OBSWebSocket from 'obs-websocket-js'
 import { Scene } from '../interfaces/scene.interface'
 
 class ObsService {
-  public obs = new OBSWebSocket();
+  public obs;
 
   constructor() {
-    this.obs.connect()
-      .then(() => {
-        console.log(`OBS Success! We're connected & authenticated.`);
-      })
-      .catch((error) => {
-        console.log(error);
-      })
+    this.obs = new OBSWebSocket();
+  }
+
+  public connect(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.obs.connect()
+        .then(() => {
+          console.log(`OBS Success! We're connected & authenticated.`);
+          return resolve
+        })
+        .catch((error) => {
+          console.log('obs connect failed!!');
+          return reject(error)
+        })
+    })
   }
 
   public async getSceneList(): Promise<any> {
@@ -49,10 +57,10 @@ class ObsService {
       this.obs.send('SetCurrentScene', {
         'scene-name': sceneName
       })
-      .then(() => resolve('success'))
-      .catch((error) => {
-        return reject(error)
-      })
+        .then(() => resolve('success'))
+        .catch((error) => {
+          return reject(error)
+        })
     })
 
   }

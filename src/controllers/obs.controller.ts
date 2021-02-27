@@ -2,7 +2,25 @@ import { NextFunction, Request, Response } from 'express';
 import obsService from '../services/obs.service';
 
 class ObsController {
-  public obsService = new obsService();
+  public obsService;
+
+  constructor() {
+    this.obsService = new obsService();
+  }
+
+  public connect(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.obsService.connect()
+        .then(() => {
+          console.log(`OBS Success! We're connected & authenticated.`);
+          return resolve
+        })
+        .catch((error) => {
+          console.log('ObsController connect failed!!');
+          return reject(error)
+        })
+    })
+  }
 
   public getScenes = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     this.obsService.getSceneList()

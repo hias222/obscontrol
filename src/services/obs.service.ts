@@ -42,6 +42,20 @@ class ObsService {
         })
     })
   }
+
+
+  public setScene(sceneName: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.obs.send('SetCurrentScene', {
+        'scene-name': sceneName
+      })
+      .then(() => resolve('success'))
+      .catch((error) => {
+        return reject(error)
+      })
+    })
+
+  }
 }
 
 export default ObsService;

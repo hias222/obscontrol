@@ -13,6 +13,7 @@ class ObsRoute implements Route {
 
   private initializeRoutes() {
     this.router.get(`${this.path}`, this.obsController.getScenes);
+    this.router.post(`${this.path}`, this.obsController.setScene);
   }
 }
 

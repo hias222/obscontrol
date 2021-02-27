@@ -25,11 +25,12 @@ export default class statusClient {
 
         console.log('mqtt start')
 
+        /*
         this.client.on('error', function (data) {
             console.log("error " + data);
         }
         )
-
+*/
 
         this.client.on('connect', function () {
             console.log("websocket backend connected");

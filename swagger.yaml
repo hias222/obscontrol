@@ -1,8 +1,23 @@
 tags:
+- name: obs
+  description: obs API
+
 - name: users
   description: users API
 
 paths:
+# [GET] obs
+  /obs:
+    get:
+      tags:
+      - obs
+      summary: Find All Scenes
+      responses:
+        200:
+          description: 'OK'
+        500:
+          description: 'Server Error'
+
 # [GET] users
   /users:
     get:

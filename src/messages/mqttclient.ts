@@ -1,4 +1,4 @@
-import mqttMiddleware from "../middlewares/mqtt.middleware";
+import { setScene } from "../middlewares/mqtt.middleware";
 
 var mqtt = require('mqtt')
 
@@ -41,7 +41,9 @@ export default class statusClient {
         });
 
         client.on('message', function (topic, message) {
-            mqttMiddleware(message)
+            setScene(message)
+            .then(() => console.log('message send to setScene ' + message))
+            .catch((error) => console.log('failed message '+ error))
         });
 
             /*

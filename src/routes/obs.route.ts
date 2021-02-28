@@ -13,9 +13,6 @@ class ObsRoute implements Route {
   }
 
   private initializeRoutes() {
-    this.obsController.connect()
-    .then(() => console.log('success obs '))
-    .catch(() => console.log('failure obs'));
     this.router.get(`${this.path}`, this.obsController.getScenes);
     this.router.post(`${this.path}`, this.obsController.setScene);
   }

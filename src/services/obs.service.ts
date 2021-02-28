@@ -1,33 +1,21 @@
 import OBSWebSocket from 'obs-websocket-js'
 import { Scene } from '../interfaces/scene.interface'
+import { logger } from '../utils/logger';
+
+const obs = new OBSWebSocket();
 
 class ObsService {
-  public obs;
-
-  constructor() {
-    this.obs = new OBSWebSocket();
-  }
-
-  public connect(): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.obs.connect()
-        .then(() => {
-          console.log(`OBS Success! We're connected & authenticated.`);
-          return resolve
-        })
-        .catch((error) => {
-          console.log('obs connect failed!!');
-          return reject(error)
-        })
-    })
-  }
 
   public async getSceneList(): Promise<any> {
 
     var sceneList: Scene[] = [];
 
     return new Promise((resolve, reject) => {
-      this.obs.send('GetSceneList')
+      obs.connect()
+        .then(() => {
+          console.log(`Success! We're connected & authenticated.`);
+          return obs.send('GetSceneList');
+        })
         .then(data => {
           console.log(`${data.scenes.length} Available Scenes!`);
           data.scenes.forEach(scene => {
@@ -37,15 +25,14 @@ class ObsService {
             sceneList.push(newScene);
             //console.log(scene)
           });
-
           resolve(sceneList);
-
         })
-        .then(() =>
-          console.log('finished scene')
-        )
+        .then(() => {
+          obs.disconnect()
+          console.log('disconnect')
+        })
         .catch((error) => {
-          console.log(error)
+          console.log('failure')
           return reject(error);
         })
     })
@@ -54,15 +41,16 @@ class ObsService {
 
   public setScene(sceneName: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.obs.send('SetCurrentScene', {
-        'scene-name': sceneName
-      })
+      obs.connect()
+        .then(() =>
+          obs.send('SetCurrentScene', {
+            'scene-name': sceneName
+          })
+        )
+        .then(() => obs.disconnect())
         .then(() => resolve('success'))
-        .catch((error) => {
-          return reject(error)
-        })
+        .catch((error) => reject(error))
     })
-
   }
 }
 

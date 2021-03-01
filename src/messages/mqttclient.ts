@@ -1,4 +1,4 @@
-import { setScene } from "../middlewares/mqtt.middleware";
+import { putRaceMessage } from "../middlewares/mqtt.middleware";
 
 var mqtt = require('mqtt')
 
@@ -41,7 +41,7 @@ export default class statusClient {
         });
 
         client.on('message', function (topic, message) {
-            setScene(message)
+            putRaceMessage(message)
             .then(() => console.log('message send to setScene ' + message))
             .catch((error) => console.log('failed message '+ error))
         });

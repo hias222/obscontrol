@@ -2,15 +2,32 @@ import ObsService from "../services/obs.service";
 
 const Obs = new ObsService();
 
-var state: string = 'runnning'
-var step: string = 'start'
+enum enumraceState {
+  StartList = 'START',
+  StartDelay ='STARTDELAY',
+  RaceRunning = 'RUNNING',
+  RaceRunningDelay = 'RUNNINGDELAY',
+  RaceFinish ='FINISH',
+  RaceEnd = 'END'
+}
 
-const setScene = (message: any): Promise<any> => {
+
+// StartList, StartDelay, RaceRunning, RaceRunningDelay, RaceFinish, RaceEnd
+var raceState: string = enumraceState.StartList;
+
+var state: string = 'runnning'
+var step: string = 'init'
+
+const putRaceMessage = (message: any): Promise<any> => {
   return new Promise((resolve, reject) => {
     getMessageType(message)
       .then((data) => {
+        step = 'getRaceState'
+        getRaceState(data)
+      })
+      .then(() => {
         step = 'getSceneName'
-        return getSceneName(data)
+        return getSceneName(raceState)
       })
       .then((data) => {
         step = 'checkTypeChange'
@@ -41,6 +58,22 @@ function getMessageType(message: string): Promise<string> {
   })
 }
 
+// StartList, StartDelay, RaceRunning, RaceRunningDelay, RaceFinish, RaceEnd
+
+function getRaceState(message: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    switch (raceState) {
+      case enumraceState.StartList:
+        if (message === 'start') raceState = enumraceState.RaceRunning;
+        resolve(raceState)
+        break;
+      default:
+        reject('not found')
+        break;
+    }
+  })
+}
+
 function checkTypeChange(status: string): Promise<string> {
   return new Promise((resolve, reject) => {
     if (status !== state) {
@@ -52,21 +85,21 @@ function checkTypeChange(status: string): Promise<string> {
   })
 }
 
-function getSceneName(status: string): Promise<string> {
+function getSceneName(state: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    switch (status.toLowerCase()) {
-      case 'header':
-        if (typeof process.env.OBS_HEADER_SCENE === "undefined") {
+    switch (state) {
+      case enumraceState.StartList:
+        if (typeof process.env.OBS_START_LIST === "undefined") {
           reject('not found')
         } else {
-          resolve(process.env.OBS_HEADER_SCENE)
+          resolve(process.env.OBS_START_LIST)
         }
         break;
-      case 'start':
-        if (typeof process.env.OBS_START_SCENE === "undefined") {
+      case enumraceState.RaceRunning:
+        if (typeof process.env.OBS_RACE_RUNNING === "undefined") {
           reject('not found')
         } else {
-          resolve(process.env.OBS_START_SCENE)
+          resolve(process.env.OBS_RACE_RUNNING)
         }
         break;
       default:
@@ -77,5 +110,5 @@ function getSceneName(status: string): Promise<string> {
 }
 
 
-export { setScene, Obs };
+export { putRaceMessage, Obs };
 

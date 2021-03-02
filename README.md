@@ -6,7 +6,7 @@
 
 ## swagger
 
-<http://localhost:3000/api-docs>
+<http://localhost:3000/obscontrol/api-docs>
 
 ## commands
 Run the Server in production mode : npm run start

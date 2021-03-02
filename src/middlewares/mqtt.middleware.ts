@@ -71,6 +71,12 @@ function getRaceState(message: string): Promise<string> {
       case enumraceState.StartList:
         if (message === 'start') resolve(enumraceState.RaceRunning)
         break;
+      case enumraceState.RaceRunning:
+        if (message === 'stop') resolve(enumraceState.RaceEnd)
+        break;
+      case enumraceState.RaceEnd:
+        if (message === 'start') resolve(enumraceState.RaceRunning)
+        break;
       default:
         reject('not found')
         break;
@@ -121,6 +127,13 @@ function getSceneName(state: string): Promise<string> {
           reject('not found')
         } else {
           resolve(process.env.OBS_RACE_RUNNING)
+        }
+        break;
+      case enumraceState.RaceEnd:
+        if (typeof process.env.OBS_RACE_END === "undefined") {
+          reject('not found')
+        } else {
+          resolve(process.env.OBS_RACE_END)
         }
         break;
       default:

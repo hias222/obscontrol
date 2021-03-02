@@ -13,7 +13,7 @@ class ObsService {
     return new Promise((resolve, reject) => {
       obs.connect()
         .then(() => {
-          console.log(`Success! We're connected & authenticated.`);
+          logger.info(`Success! We're connected & authenticated.`);
           return obs.send('GetSceneList');
         })
         .then(data => {
@@ -40,16 +40,21 @@ class ObsService {
 
 
   public setScene(sceneName: string): Promise<any> {
+    logger.info('setScene' + sceneName)
     return new Promise((resolve, reject) => {
       obs.connect()
-        .then(() =>
+        .then(() => {
+          logger.info('obs send to ' + sceneName )
           obs.send('SetCurrentScene', {
             'scene-name': sceneName
           })
-        )
+        })
         .then(() => obs.disconnect())
-        .then(() => resolve('success'))
-        .catch((error) => reject(error))
+        //.then(() => resolve('success'))
+        .catch((error) => {
+          logger.error('OBS switch to ' + sceneName + ' ' + error)
+         // return reject(error)
+        })
     })
   }
 }

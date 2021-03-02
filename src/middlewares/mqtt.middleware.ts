@@ -1,21 +1,23 @@
 import ObsService from "../services/obs.service";
+import { logger } from "../utils/logger";
 
 const Obs = new ObsService();
 
 enum enumraceState {
   StartList = 'START',
-  StartDelay ='STARTDELAY',
+  StartDelay = 'STARTDELAY',
   RaceRunning = 'RUNNING',
   RaceRunningDelay = 'RUNNINGDELAY',
-  RaceFinish ='FINISH',
+  RaceFinish = 'FINISH',
   RaceEnd = 'END'
 }
 
 
 // StartList, StartDelay, RaceRunning, RaceRunningDelay, RaceFinish, RaceEnd
 var raceState: string = enumraceState.StartList;
+var obsState: string = enumraceState.StartList;
 
-var state: string = 'runnning'
+//var state: string = 'runnning'
 var step: string = 'init'
 
 const putRaceMessage = (message: any): Promise<any> => {
@@ -23,7 +25,11 @@ const putRaceMessage = (message: any): Promise<any> => {
     getMessageType(message)
       .then((data) => {
         step = 'getRaceState'
-        getRaceState(data)
+        return getRaceState(data)
+      })
+      .then((data) => {
+        step = 'getRaceState'
+        updateRaceState(data)
       })
       .then(() => {
         step = 'getSceneName'
@@ -38,7 +44,6 @@ const putRaceMessage = (message: any): Promise<any> => {
         return Obs.setScene(data)
       })
       .then(() => {
-        console.log('switch to ' + state)
         resolve('success scene')
       })
       .catch(() => {
@@ -64,20 +69,36 @@ function getRaceState(message: string): Promise<string> {
   return new Promise((resolve, reject) => {
     switch (raceState) {
       case enumraceState.StartList:
-        if (message === 'start') raceState = enumraceState.RaceRunning;
-        resolve(raceState)
+        if (message === 'start') resolve(enumraceState.RaceRunning)
         break;
       default:
         reject('not found')
         break;
     }
+
+  })
+}
+
+
+function updateRaceState(newraceState: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (newraceState !== undefined) {
+      if (newraceState !== raceState) {
+        raceState = newraceState
+        logger.info('raceState is ' + newraceState)
+      }
+      resolve(newraceState)
+    } else {
+      reject('undefined')
+    }
+
   })
 }
 
 function checkTypeChange(status: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    if (status !== state) {
-      state = status;
+    if (status !== obsState) {
+      obsState = status;
       resolve(status)
     } else {
       reject('no change')

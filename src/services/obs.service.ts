@@ -4,6 +4,8 @@ import { logger } from '../utils/logger';
 
 const obs = new OBSWebSocket();
 
+var obs_address = typeof process.env.OBS_ADDRESS !== "undefined" ? process.env.OBS_ADDRESS : 'localhost:4444';
+
 class ObsService {
 
   public async getSceneList(): Promise<any> {
@@ -11,7 +13,7 @@ class ObsService {
     var sceneList: Scene[] = [];
 
     return new Promise((resolve, reject) => {
-      obs.connect()
+      obs.connect({ address: obs_address })
         .then(() => {
           logger.info(`Success! We're connected & authenticated.`);
           return obs.send('GetSceneList');
@@ -32,7 +34,7 @@ class ObsService {
           console.log('disconnect')
         })
         .catch((error) => {
-          console.log('failure')
+          console.log('failure on ' + obs_address)
           return reject(error);
         })
     })
@@ -44,7 +46,7 @@ class ObsService {
     return new Promise((resolve, reject) => {
       obs.connect()
         .then(() => {
-          logger.info('obs send to ' + sceneName )
+          logger.info('obs send to ' + sceneName)
           obs.send('SetCurrentScene', {
             'scene-name': sceneName
           })
@@ -53,7 +55,7 @@ class ObsService {
         //.then(() => resolve('success'))
         .catch((error) => {
           logger.error('OBS switch to ' + sceneName + ' ' + error)
-         // return reject(error)
+          // return reject(error)
         })
     })
   }

@@ -22,17 +22,54 @@ function getMessageType(message: string): Promise<MqttMessage> {
     return new Promise((resolve, reject) => {
         try {
             var jsonmessage = JSON.parse(message)
-            var messagetype : string =jsonmessage.type
-            //todo switch on string to enum
-            var test: MqttMessage = {
-                message: enumMqttMessage.start
-            }
-            resolve(test)
+            var messagetype: string = jsonmessage.type
+            //console.log(jsonmessage)
+            getMqttMessage(messagetype, jsonmessage)
+                .then((msg) => resolve(msg))
+                .catch(() => reject)
         } catch (e) {
             reject('error')
         }
     })
 }
+
+
+function getMqttMessage(messagetype: string, jsonmessage: any): Promise<MqttMessage> {
+    return new Promise((resolve, reject) => {
+        switch (messagetype) {
+            case 'start':
+                var mqttMessage: MqttMessage = {
+                    message: enumMqttMessage.start
+                }
+                resolve(mqttMessage)
+                break;
+            case 'stop':
+                var mqttMessage: MqttMessage = {
+                    message: enumMqttMessage.stop
+                }
+                resolve(mqttMessage)
+                break;
+            case 'lane':
+                if (jsonmessage.place !== 'undefined' && jsonmessage.place !== '0') {
+                    var mqttMessage: MqttMessage = {
+                        message: enumMqttMessage.finish
+                    }
+                    resolve(mqttMessage)
+                } else {
+                    var mqttMessage: MqttMessage = {
+                        message: enumMqttMessage.lap
+                    }
+                    resolve(mqttMessage)
+                }
+                break;
+            default:
+                reject
+                break;
+        }
+    })
+}
+
+
 export default class statusClient {
 
     connect() {
@@ -61,8 +98,9 @@ export default class statusClient {
         client.on('message', function (topic, message) {
             getMessageType(message)
                 .then((mqttMsg) => putRaceMessage(mqttMsg))
-                .catch((error) => 
-                logger.error('failed message analyse on mqtt topic ' + topic + " " + message + " " + error )
+                .catch((error) =>
+                    logger.info('discard msg')
+                    //logger.error('failed message analyse on mqtt topic ' + topic + " " + message + " " + error)
                 )
         });
 

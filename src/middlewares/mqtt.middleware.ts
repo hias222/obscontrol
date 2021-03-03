@@ -58,6 +58,11 @@ function getRaceState(message: enumMqttMessage): Promise<string> {
         if (message === enumMqttMessage.start) resolve(enumraceState.RaceRunning)
         break;
       case enumraceState.RaceRunning:
+        if (message === enumMqttMessage.finish) resolve(enumraceState.RaceFinish)
+        if (message === enumMqttMessage.stop) resolve(enumraceState.RaceEnd)
+        break;
+      case enumraceState.RaceFinish:
+        if (message === enumMqttMessage.start) resolve(enumraceState.RaceRunning)
         if (message === enumMqttMessage.stop) resolve(enumraceState.RaceEnd)
         break;
       case enumraceState.RaceEnd:
@@ -114,6 +119,13 @@ function getSceneName(state: string): Promise<string> {
           reject('not found')
         } else {
           resolve(process.env.OBS_RACE_RUNNING)
+        }
+        break;
+      case enumraceState.RaceFinish:
+        if (typeof process.env.OBS_RACE_FINISH === "undefined") {
+          reject('not found')
+        } else {
+          resolve(process.env.OBS_RACE_FINISH)
         }
         break;
       case enumraceState.RaceEnd:

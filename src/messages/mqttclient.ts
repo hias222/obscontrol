@@ -1,4 +1,6 @@
 import { putRaceMessage } from "../middlewares/mqtt.middleware";
+import { enumMqttMessage, MqttMessage } from "../interfaces/mqtt.interface"
+import { logger } from "../utils/logger";
 
 var mqtt = require('mqtt')
 
@@ -14,6 +16,22 @@ var settings = {
     username: mqtt_username_local,
     password: mqtt_password_local,
     clientId: 'display_' + Math.random().toString(16).substr(2, 8)
+}
+
+function getMessageType(message: string): Promise<MqttMessage> {
+    return new Promise((resolve, reject) => {
+        try {
+            var jsonmessage = JSON.parse(message)
+            var messagetype : string =jsonmessage.type
+            //todo switch on string to enum
+            var test: MqttMessage = {
+                message: enumMqttMessage.start
+            }
+            resolve(test)
+        } catch (e) {
+            reject('error')
+        }
+    })
 }
 export default class statusClient {
 
@@ -41,17 +59,19 @@ export default class statusClient {
         });
 
         client.on('message', function (topic, message) {
-            putRaceMessage(message)
-            .then(() => console.log('message send to setScene ' + message))
-            .catch((error) => console.log('failed message '+ error))
+            getMessageType(message)
+                .then((mqttMsg) => putRaceMessage(mqttMsg))
+                .catch((error) => 
+                logger.error('failed message analyse on mqtt topic ' + topic + " " + message + " " + error )
+                )
         });
 
-            /*
+        /*
 
-    this.client.on('disconnect', function () {
-        console.log("websocket backend disconnected");
-        this.client = mqtt.connect(mqtt_host, settings);
-    });
+this.client.on('disconnect', function () {
+    console.log("websocket backend disconnected");
+    this.client = mqtt.connect(mqtt_host, settings);
+});
 */
 
     }

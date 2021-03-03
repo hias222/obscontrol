@@ -1,5 +1,6 @@
 import ObsService from "../services/obs.service";
 import { logger } from "../utils/logger";
+import { enumMqttMessage, MqttMessage } from "../interfaces/mqtt.interface"
 
 const Obs = new ObsService();
 
@@ -20,13 +21,9 @@ var obsState: string = enumraceState.StartList;
 //var state: string = 'runnning'
 var step: string = 'init'
 
-const putRaceMessage = (message: any): Promise<any> => {
+const putRaceMessage = (mqttMessage: MqttMessage): Promise<any> => {
   return new Promise((resolve, reject) => {
-    getMessageType(message)
-      .then((data) => {
-        step = 'getRaceState'
-        return getRaceState(data)
-      })
+    getRaceState(mqttMessage.message)
       .then((data) => {
         step = 'getRaceState'
         updateRaceState(data)
@@ -52,32 +49,22 @@ const putRaceMessage = (message: any): Promise<any> => {
   })
 };
 
-function getMessageType(message: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    try {
-      var jsonmessage = JSON.parse(message)
-      resolve(jsonmessage.type)
-    } catch (e) {
-      reject('error')
-    }
-  })
-}
-
 // StartList, StartDelay, RaceRunning, RaceRunningDelay, RaceFinish, RaceEnd
 
-function getRaceState(message: string): Promise<string> {
+function getRaceState(message: enumMqttMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     switch (raceState) {
       case enumraceState.StartList:
-        if (message === 'start') resolve(enumraceState.RaceRunning)
+        if (message === enumMqttMessage.start) resolve(enumraceState.RaceRunning)
         break;
       case enumraceState.RaceRunning:
-        if (message === 'stop') resolve(enumraceState.RaceEnd)
+        if (message === enumMqttMessage.stop) resolve(enumraceState.RaceEnd)
         break;
       case enumraceState.RaceEnd:
-        if (message === 'start') resolve(enumraceState.RaceRunning)
+        if (message === enumMqttMessage.start) resolve(enumraceState.RaceRunning)
         break;
       default:
+        logger.error('getRaceState not found message')
         reject('not found')
         break;
     }

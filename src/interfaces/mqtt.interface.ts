@@ -2,7 +2,8 @@ export enum enumMqttMessage {
     start,
     stop,
     lap,
-    finish
+    finish,
+    newheader
   }
 
 

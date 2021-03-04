@@ -64,9 +64,11 @@ function getRaceState(message: enumMqttMessage): Promise<string> {
       case enumraceState.RaceFinish:
         if (message === enumMqttMessage.start) resolve(enumraceState.RaceRunning)
         if (message === enumMqttMessage.stop) resolve(enumraceState.RaceEnd)
+        if (message === enumMqttMessage.newheader) resolve(enumraceState.StartList)
         break;
       case enumraceState.RaceEnd:
         if (message === enumMqttMessage.start) resolve(enumraceState.RaceRunning)
+        if (message === enumMqttMessage.newheader) resolve(enumraceState.StartList)
         break;
       default:
         logger.error('getRaceState not found message')

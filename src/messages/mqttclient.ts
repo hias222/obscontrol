@@ -11,12 +11,30 @@ var mqtt_password_local = typeof process.env.MQTT_PASSWORD_LOCAL !== "undefined"
 
 const topic_name = "mainchannel"
 
+var actualHeat = '0'
+var actualEvent = '0'
+
 var settings = {
     keepalive: 2000,
     username: mqtt_username_local,
     password: mqtt_password_local,
     clientId: 'display_' + Math.random().toString(16).substr(2, 8)
 }
+
+/*
+{
+  type: 'header',
+  relaycount: '1',
+  event: '1',
+  heat: '1',
+  gender: 'M',
+  round: 'TIM',
+  swimstyle: 'BREAST',
+  distance: '25',
+  name: null,
+  competition: '43. Fürther Kinderschwimmen'
+}
+*/
 
 function getMessageType(message: string): Promise<MqttMessage> {
     return new Promise((resolve, reject) => {
@@ -60,6 +78,18 @@ function getMqttMessage(messagetype: string, jsonmessage: any): Promise<MqttMess
                         message: enumMqttMessage.lap
                     }
                     resolve(mqttMessage)
+                }
+                break;
+            case 'header':
+                if (jsonmessage.event !== actualEvent || jsonmessage.heat !== actualHeat) {
+                    actualEvent = jsonmessage.event
+                    actualHeat = jsonmessage.heat
+                    var mqttMessage: MqttMessage = {
+                        message: enumMqttMessage.newheader
+                    }
+                    resolve(mqttMessage)
+                } else {
+                    reject
                 }
                 break;
             default:

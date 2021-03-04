@@ -6,9 +6,9 @@ const Obs = new ObsService();
 
 enum enumraceState {
   StartList = 'START',
-  StartDelay = 'STARTDELAY',
+  PoolList = 'POOL',
+  RaceBeginning = 'BEGIN',
   RaceRunning = 'RUNNING',
-  RaceRunningDelay = 'RUNNINGDELAY',
   RaceFinish = 'FINISH',
   RaceEnd = 'END'
 }
@@ -22,9 +22,11 @@ var obsState: string = enumraceState.StartList;
 var step: string = 'init'
 
 const putRaceMessage = (mqttMessage: MqttMessage): Promise<any> => {
+  //console.log(mqttMessage.message)
   return new Promise((resolve, reject) => {
     getRaceState(mqttMessage.message)
       .then((data) => {
+        //console.log(' xxx- ' + data)
         step = 'getRaceState'
         updateRaceState(data)
       })
@@ -38,6 +40,9 @@ const putRaceMessage = (mqttMessage: MqttMessage): Promise<any> => {
       })
       .then((data) => {
         step = 'setScene'
+        setTimeout(function () {
+          delayForSwitch(mqttMessage.message);
+        }, 5000);
         return Obs.setScene(data)
       })
       .then(() => {
@@ -49,17 +54,51 @@ const putRaceMessage = (mqttMessage: MqttMessage): Promise<any> => {
   })
 };
 
+function delayForSwitch(message: enumMqttMessage) {
+  if (message === enumMqttMessage.newheader) {
+    var mqttMessage1: MqttMessage = {
+      message: enumMqttMessage.newHeaderdelay
+    }
+    putRaceMessage(mqttMessage1)
+  }
+  
+  if (message === enumMqttMessage.start) {
+    var mqttMessage2: MqttMessage = {
+      message: enumMqttMessage.startdelay
+    }
+    putRaceMessage(mqttMessage2)
+  }
+  
+}
+
+
 // StartList, StartDelay, RaceRunning, RaceRunningDelay, RaceFinish, RaceEnd
 
 function getRaceState(message: enumMqttMessage): Promise<string> {
   return new Promise((resolve, reject) => {
+    //console.log(raceState + ' - ' + message)
     switch (raceState) {
       case enumraceState.StartList:
-        if (message === enumMqttMessage.start) resolve(enumraceState.RaceRunning)
+        if (message === enumMqttMessage.start) resolve(enumraceState.RaceBeginning)
+        if (message === enumMqttMessage.newHeaderdelay) resolve(enumraceState.PoolList)
+        if (message === enumMqttMessage.finish) resolve(enumraceState.RaceFinish)
+        break;
+      case enumraceState.PoolList:
+        if (message === enumMqttMessage.start) resolve(enumraceState.RaceBeginning)
+        if (message === enumMqttMessage.finish) resolve(enumraceState.RaceFinish)
+        if (message === enumMqttMessage.stop) resolve(enumraceState.StartList)
+        if (message === enumMqttMessage.newheader) resolve(enumraceState.StartList)
+        break;
+      case enumraceState.RaceBeginning:
+        if (message === enumMqttMessage.startdelay) resolve(enumraceState.RaceRunning)
+        if (message === enumMqttMessage.finish) resolve(enumraceState.RaceFinish)
+        if (message === enumMqttMessage.stop) resolve(enumraceState.PoolList)
+        if (message === enumMqttMessage.newheader) resolve(enumraceState.StartList)
         break;
       case enumraceState.RaceRunning:
         if (message === enumMqttMessage.finish) resolve(enumraceState.RaceFinish)
-        if (message === enumMqttMessage.stop) resolve(enumraceState.RaceEnd)
+        if (message === enumMqttMessage.stop) resolve(enumraceState.PoolList)
+        if (message === enumMqttMessage.newheader) resolve(enumraceState.StartList)
         break;
       case enumraceState.RaceFinish:
         if (message === enumMqttMessage.start) resolve(enumraceState.RaceRunning)
@@ -67,7 +106,7 @@ function getRaceState(message: enumMqttMessage): Promise<string> {
         if (message === enumMqttMessage.newheader) resolve(enumraceState.StartList)
         break;
       case enumraceState.RaceEnd:
-        if (message === enumMqttMessage.start) resolve(enumraceState.RaceRunning)
+        if (message === enumMqttMessage.start) resolve(enumraceState.RaceBeginning)
         if (message === enumMqttMessage.newheader) resolve(enumraceState.StartList)
         break;
       default:
@@ -114,6 +153,20 @@ function getSceneName(state: string): Promise<string> {
           reject('not found')
         } else {
           resolve(process.env.OBS_START_LIST)
+        }
+        break;
+      case enumraceState.PoolList:
+        if (typeof process.env.OBS_POOL_LIST === "undefined") {
+          reject('not found')
+        } else {
+          resolve(process.env.OBS_POOL_LIST)
+        }
+        break;
+      case enumraceState.RaceBeginning:
+        if (typeof process.env.OBS_RACE_BEGINNING === "undefined") {
+          reject('not found')
+        } else {
+          resolve(process.env.OBS_RACE_BEGINNING)
         }
         break;
       case enumraceState.RaceRunning:

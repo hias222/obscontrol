@@ -42,11 +42,11 @@ class ObsService {
 
 
   public setScene(sceneName: string): Promise<any> {
-    logger.info('setScene' + sceneName)
+    logger.info('setScene ' + sceneName)
     return new Promise((resolve, reject) => {
       obs.connect({ address: obs_address })
         .then(() => {
-          logger.info('obs send to ' + sceneName)
+          logger.info('obs send ' + sceneName)
           obs.send('SetCurrentScene', {
             'scene-name': sceneName
           })

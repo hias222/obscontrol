@@ -19,22 +19,18 @@ class ObsService {
           return obs.send('GetSceneList');
         })
         .then(data => {
-          console.log(`${data.scenes.length} Available Scenes!`);
+          //console.log(`${data.scenes.length} Available Scenes!`);
           data.scenes.forEach(scene => {
             const newScene: Scene = {
               name: scene.name
             }
             sceneList.push(newScene);
-            //console.log(scene)
           });
-          resolve(sceneList);
-        })
-        .then(() => {
           obs.disconnect()
-          console.log('disconnect')
+          return resolve(sceneList);
         })
         .catch((error) => {
-          console.log('failure on ' + obs_address)
+          console.log('error get scene list from ' + obs_address)
           return reject(error);
         })
     })
@@ -42,20 +38,20 @@ class ObsService {
 
 
   public setScene(sceneName: string): Promise<any> {
-    logger.info('setScene ' + sceneName)
+    //logger.info('setScene ' + sceneName)
     return new Promise((resolve, reject) => {
       obs.connect({ address: obs_address })
         .then(() => {
           logger.info('obs send ' + sceneName)
-          obs.send('SetCurrentScene', {
+          return obs.send('SetCurrentScene', {
             'scene-name': sceneName
           })
         })
         .then(() => obs.disconnect())
-        //.then(() => resolve('success'))
+        .then (() => resolve('send ' + sceneName + ' to obs ' + obs_address))
         .catch((error) => {
           logger.error('OBS switch to ' + sceneName + ' ' + error)
-          // return reject(error)
+          return reject('switch to  ' + sceneName + ' failed - not exists? (obs ' + obs_address + ')')
         })
     })
   }

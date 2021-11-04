@@ -42,7 +42,8 @@ class App {
 
   private initializeMiddlewares() {
     if (this.env === 'production') {
-      this.app.use(morgan('combined', { stream }));
+      //combined
+      this.app.use(morgan('common', { stream }));
       this.app.use(cors({ origin: 'ubuntu', credentials: true }));
     } else if (this.env === 'development') {
       this.app.use(morgan('dev', { stream }));

@@ -67,7 +67,7 @@ function getMqttMessage(messagetype: string, jsonmessage: any): Promise<MqttMess
                 break;
             case 'header':
                 if (jsonmessage.event !== actualEvent || jsonmessage.heat !== actualHeat) {
-                    console.log('new ' + jsonmessage.event + ' - ' + jsonmessage.heat)
+                    console.log('get new ' + jsonmessage.event + ' - ' + jsonmessage.heat)
                     actualEvent = jsonmessage.event
                     actualHeat = jsonmessage.heat
                     var mqttMessage: MqttMessage = {
@@ -113,9 +113,15 @@ export default class statusClient {
 
         client.on('message', function (topic, message) {
             getMessageType(message)
-                .then((mqttMsg) => putRaceMessage(mqttMsg))
+                .then((mqttMsg) => {
+                    //logger.info('put ' + mqttMsg.message)
+                    return putRaceMessage(mqttMsg)
+                })
+                .finally(() =>
+                    logger.info('message succeded ')
+                )
                 .catch((error) =>
-                    logger.info('discard msg')
+                    logger.info('discard msg ' + error)
                     //logger.error('failed message analyse on mqtt topic ' + topic + " " + message + " " + error)
                 )
         });

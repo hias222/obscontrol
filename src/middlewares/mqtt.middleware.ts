@@ -36,20 +36,23 @@ const putRaceMessage = (mqttMessage: MqttMessage): Promise<any> => {
       })
       .then((data) => {
         step = 'checkTypeChange'
+        setTimeout(function () {
+          delayForSwitch(mqttMessage.message);
+        }, 5000);
         return checkTypeChange(data)
       })
       .then((data) => {
         step = 'setScene'
-        setTimeout(function () {
-          delayForSwitch(mqttMessage.message);
-        }, 5000);
         return Obs.setScene(data)
       })
       .then(() => {
         resolve('success scene')
       })
-      .catch(() => {
-        reject('error ' + step)
+      .catch((data) => {
+        logger.info('exit at ' + step + " with " + data)
+        resolve('end')
+        // we goit an error on exit - node crashes
+        //reject('error')
       })
   })
 };
@@ -79,6 +82,8 @@ function getRaceState(message: enumMqttMessage): Promise<string> {
     //console.log(raceState + ' - ' + message)
     switch (raceState) {
       case enumraceState.StartList:
+        //refresh on new header
+        if (message === enumMqttMessage.newheader) resolve(enumraceState.StartList)
         if (message === enumMqttMessage.start) resolve(enumraceState.RaceBeginning)
         if (message === enumMqttMessage.newHeaderdelay) resolve(enumraceState.PoolList)
         if (message === enumMqttMessage.finish) resolve(enumraceState.RaceFinish)
@@ -136,6 +141,7 @@ function updateRaceState(newraceState: string): Promise<string> {
 
 function checkTypeChange(status: string): Promise<string> {
   return new Promise((resolve, reject) => {
+    
     if (status !== obsState) {
       obsState = status;
       resolve(status)
